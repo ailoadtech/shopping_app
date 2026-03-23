@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Shopping List</string>
+    <string name="filter_all">All</string>
+    <string name="filter_rewe">Rewe</string>
+    <string name="filter_hit">Hit</string>
+    <string name="filter_dm">DM</string>
+    <string name="filter_mueller">Mueller</string>
+    <string name="filter_edeka">Edeka</string>
+    <string name="filter_kaufland">Kaufland</string>
+    <string name="add_button">OK</string>
+    <string name="empty_list">No items in list</string>
+    <string name="hint_enter_item">Enter item name</string>
+    <string name="error_empty_input">Please enter an item name</string>
+</resources>

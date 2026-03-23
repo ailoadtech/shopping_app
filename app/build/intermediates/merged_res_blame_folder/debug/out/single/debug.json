@@ -1,0 +1,38 @@
+[
+    {
+        "merged": "com.example.shoppinglist.app-merged_res-50:/drawable_ic_hit.jpg.flat",
+        "source": "com.example.shoppinglist.app-main-52:/drawable/ic_hit.jpg"
+    },
+    {
+        "merged": "com.example.shoppinglist.app-merged_res-50:/drawable_ic_mueller.jpg.flat",
+        "source": "com.example.shoppinglist.app-main-52:/drawable/ic_mueller.jpg"
+    },
+    {
+        "merged": "com.example.shoppinglist.app-merged_res-50:/drawable_ic_kaufland.jpg.flat",
+        "source": "com.example.shoppinglist.app-main-52:/drawable/ic_kaufland.jpg"
+    },
+    {
+        "merged": "com.example.shoppinglist.app-merged_res-50:/drawable_ic_dm.jpg.flat",
+        "source": "com.example.shoppinglist.app-main-52:/drawable/ic_dm.jpg"
+    },
+    {
+        "merged": "com.example.shoppinglist.app-merged_res-50:/drawable_ic_edeka.jpg.flat",
+        "source": "com.example.shoppinglist.app-main-52:/drawable/ic_edeka.jpg"
+    },
+    {
+        "merged": "com.example.shoppinglist.app-merged_res-50:/mipmap-anydpi_ic_launcher.xml.flat",
+        "source": "com.example.shoppinglist.app-main-52:/mipmap-anydpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.example.shoppinglist.app-merged_res-50:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.example.shoppinglist.app-main-52:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.example.shoppinglist.app-merged_res-50:/mipmap-anydpi_ic_launcher_round.xml.flat",
+        "source": "com.example.shoppinglist.app-main-52:/mipmap-anydpi/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.example.shoppinglist.app-merged_res-50:/drawable_ic_rewe.jpg.flat",
+        "source": "com.example.shoppinglist.app-main-52:/drawable/ic_rewe.jpg"
+    }
+]
