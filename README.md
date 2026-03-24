@@ -12,7 +12,9 @@ I needed an offline app reflecting all my supermarkets where i am buying, so i b
 - **No Permissions Required**: Uses app-specific storage, no Android permissions needed
 - **Material 3 UI**: Modern Android UI with Material Design 3 components
 
-[Image 1]: screenshot.jpg
+## Screenshot
+
+![App Screenshot](screenshot.jpg)
 
 ## Quick Start
 
