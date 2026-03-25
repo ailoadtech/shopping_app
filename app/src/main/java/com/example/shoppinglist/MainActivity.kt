@@ -222,10 +222,11 @@ fun FilterButton(
 @Composable
 fun SwipeableItem(
     item: ShoppingItem,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    key: Any? = null
 ) {
-    var showDelete by remember { mutableStateOf(false) }
-    
+    var showDelete by remember(key) { mutableStateOf(false) }
+
     ListItem(
         headlineContent = { Text(item.name) },
         trailingContent = if (showDelete) {
@@ -265,15 +266,12 @@ fun ShoppingList(
                 }
             }
         } else {
-            items(items.size) { index ->
-                val item = items[index]
+            items(items, key = { it }) { item ->
                 SwipeableItem(
                     item = item,
                     onDelete = { onDelete(item) }
                 )
-                if (index < items.lastIndex) {
-                    HorizontalDivider()
-                }
+                HorizontalDivider()
             }
         }
     }
