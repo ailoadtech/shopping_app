@@ -280,7 +280,7 @@ fun ShoppingList(
 @Composable
 fun ShopSelector(
     selectedShop: Int?,
-    onShopSelected: (Int?) -> Unit
+    onStoreClick: (Int) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -294,8 +294,8 @@ fun ShopSelector(
                 iconRes = supermarket.logoRes,
                 contentDescription = supermarket.name,
                 isSelected = selectedShop == supermarket.number,
-                onClick = { 
-                    onShopSelected(if (selectedShop == supermarket.number) null else supermarket.number)
+                onClick = {
+                    onStoreClick(supermarket.number)
                 }
             )
         }
@@ -312,6 +312,22 @@ fun InputRow(
     var text by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // Handler for when a store icon is clicked in the ShopSelector
+    val onStoreIconClick: (Int) -> Unit = { storeNumber ->
+        val trimmed = text.trim()
+        if (trimmed.isNotEmpty()) {
+            // Auto-add item with this store
+            onAdd(trimmed, storeNumber)
+            text = ""
+            errorMessage = null
+            onShopSelected(null)
+            focusManager.clearFocus()
+        } else {
+            // No text, just toggle selection
+            onShopSelected(if (selectedShop == storeNumber) null else storeNumber)
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 8.dp
@@ -321,7 +337,7 @@ fun InputRow(
         ) {
             ShopSelector(
                 selectedShop = selectedShop,
-                onShopSelected = onShopSelected
+                onStoreClick = onStoreIconClick
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),

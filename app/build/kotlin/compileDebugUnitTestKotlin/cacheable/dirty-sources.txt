@@ -1,0 +1,4 @@
+/mnt/c/temp/_ki_project_aws/shopping_app/app/src/test/java/com/example/shoppinglist/ShoppingAppTest.kt
+/mnt/c/temp/_ki_project_aws/shopping_app/app/src/test/java/com/example/shoppinglist/StatePersistenceTest.kt
+/mnt/c/temp/_ki_project_aws/shopping_app/app/src/test/java/com/example/shoppinglist/FileManagerTest.kt
+/mnt/c/temp/_ki_project_aws/shopping_app/app/src/test/java/com/example/shoppinglist/ParsingTest.kt
