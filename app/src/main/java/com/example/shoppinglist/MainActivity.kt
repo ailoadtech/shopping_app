@@ -1,22 +1,22 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.example.shoppinglist
 
-import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,22 +25,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.content.res.ResourcesCompat
-import androidx.compose.foundation.clickable
+import androidx.compose.ui.unit.*
 import java.io.File
 import java.io.IOException
-import java.util.Collections
 import kotlinx.parcelize.Parcelize
-import androidx.compose.runtime.saveable.rememberSaveable
 
 enum class Supermarket(val number: Int, val logoRes: Int) {
     REWE(1, R.drawable.ic_rewe),
@@ -128,6 +124,26 @@ class FileManager(private val context: android.content.Context) {
             file.writeText(updated.joinToString("\n") { itemToString(it) } + "\n")
         } catch (e: IOException) {
             Log.e("FileManager", "Failed to delete: ${e.message}")
+        }
+    }
+
+    fun updateItem(oldItem: ShoppingItem, newItem: ShoppingItem) {
+        val file = getFile() ?: return
+        try {
+            val items = loadAllItems()
+            val updated = items.map { if (it == oldItem) newItem else it }
+            file.writeText(updated.joinToString("\n") { itemToString(it) } + "\n")
+        } catch (e: IOException) {
+            Log.e("FileManager", "Failed to update item: ${e.message}")
+        }
+    }
+
+    fun saveAllItems(items: List<ShoppingItem>) {
+        val file = getFile() ?: return
+        try {
+            file.writeText(items.joinToString("\n") { itemToString(it) } + "\n")
+        } catch (e: IOException) {
+            Log.e("FileManager", "Failed to save all items: ${e.message}")
         }
     }
 }
@@ -220,34 +236,97 @@ fun FilterButton(
 }
 
 @Composable
-fun SwipeableItem(
+fun DraggableItem(
     item: ShoppingItem,
+    isSelected: Boolean,
     onDelete: () -> Unit,
-    key: Any? = null
+    onToggle: () -> Unit,
+    onDragStart: (ShoppingItem, Int) -> Unit,
+    onDrag: (Float) -> Unit,
+    onDragEnd: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var showDelete by remember(key) { mutableStateOf(false) }
+    var isDragging by remember { mutableStateOf(false) }
+    var dragOffset by remember { mutableStateOf(0f) }
+    var itemHeight by remember { mutableStateOf(0) }
+
+    val backgroundColor = if (isSelected) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+    val textColor = if (isSelected) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
 
     ListItem(
-        headlineContent = { Text(item.name) },
-        trailingContent = if (showDelete) {
-            {
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = "Delete",
-                        tint = MaterialTheme.colorScheme.error
+        colors = ListItemDefaults.colors(containerColor = backgroundColor),
+        headlineContent = {
+            Text(
+                text = item.name,
+                color = textColor
+            )
+        },
+        trailingContent = {
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Delete",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .onGloballyPositioned { coordinates ->
+                itemHeight = coordinates.size.height
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = {
+                        if (itemHeight > 0) {
+                            dragOffset = 0f
+                            isDragging = true
+                            onDragStart(item, itemHeight)
+                        }
+                    }
+                )
+            }
+            .pointerInput(isDragging) {
+                if (isDragging) {
+                    detectDragGestures(
+                        onDrag = { change, dragAmount ->
+                            dragOffset += dragAmount.y
+                            onDrag(dragAmount.y)
+                        },
+                        onDragEnd = {
+                            isDragging = false
+                            dragOffset = 0f
+                            onDragEnd()
+                        }
                     )
                 }
             }
-        } else null,
-        modifier = Modifier.clickable { showDelete = !showDelete }
+            .graphicsLayer {
+                translationY = dragOffset
+                alpha = if (isDragging) 0.7f else 1f
+                shadowElevation = if (isDragging) 16.dp.toPx() else 2.dp.toPx()
+            }
     )
 }
 
 @Composable
 fun ShoppingList(
     items: List<ShoppingItem>,
+    selectedItems: Set<ShoppingItem>,
     onDelete: (ShoppingItem) -> Unit,
+    onToggle: (ShoppingItem) -> Unit,
+    onDragStart: (ShoppingItem, Int) -> Unit,
+    onDrag: (Float) -> Unit,
+    onDragEnd: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -267,9 +346,15 @@ fun ShoppingList(
             }
         } else {
             items(items, key = { it }) { item ->
-                SwipeableItem(
+                DraggableItem(
                     item = item,
-                    onDelete = { onDelete(item) }
+                    isSelected = item in selectedItems,
+                    onDelete = { onDelete(item) },
+                    onToggle = { onToggle(item) },
+                    onDragStart = onDragStart,
+                    onDrag = onDrag,
+                    onDragEnd = onDragEnd,
+                    modifier = Modifier.animateItemPlacement()
                 )
                 HorizontalDivider()
             }
@@ -310,20 +395,15 @@ fun InputRow(
 ) {
     val focusManager = LocalFocusManager.current
     var text by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    // Handler for when a store icon is clicked in the ShopSelector
     val onStoreIconClick: (Int) -> Unit = { storeNumber ->
         val trimmed = text.trim()
         if (trimmed.isNotEmpty()) {
-            // Auto-add item with this store
             onAdd(trimmed, storeNumber)
             text = ""
-            errorMessage = null
             onShopSelected(null)
             focusManager.clearFocus()
         } else {
-            // No text, just toggle selection
             onShopSelected(if (selectedShop == storeNumber) null else storeNumber)
         }
     }
@@ -347,16 +427,13 @@ fun InputRow(
                     value = text,
                     onValueChange = { newText ->
                         text = newText
-                        errorMessage = null
                     },
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp),
                     placeholder = { Text("") },
                     singleLine = true,
-                    isError = errorMessage != null,
-                    textStyle = MaterialTheme.typography.bodyLarge,
-                    supportingText = errorMessage?.let { { Text(it) } }
+                    textStyle = MaterialTheme.typography.bodyLarge
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
@@ -367,12 +444,14 @@ fun InputRow(
                             text = ""
                             onShopSelected(null)
                             focusManager.clearFocus()
-                        } else {
-                            errorMessage = "Please enter an item name"
                         }
                     },
                     shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.height(56.dp)
+                    modifier = Modifier.height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
                 ) {
                     Text("OK", style = MaterialTheme.typography.bodyLarge)
                 }
@@ -390,16 +469,54 @@ fun ShoppingApp() {
     val items = remember { mutableStateListOf<ShoppingItem>() }
     val filter = remember { mutableStateOf<Int?>(null) }
     val selectedShop = remember { mutableStateOf<Int?>(null) }
+    val draggedItem = remember { mutableStateOf<ShoppingItem?>(null) }
+    val dragOriginalIndex = remember { mutableStateOf(-1) }
+    val draggedOffset = remember { mutableStateOf(0f) }
+    val draggedItemHeight = remember { mutableStateOf(0) }
+    val selectedItems = remember { mutableStateOf<Set<ShoppingItem>>(emptySet()) }
 
     LaunchedEffect(Unit) {
         val loaded = fileManager.loadAllItems()
         items.addAll(loaded)
     }
 
-    val filteredItems: List<ShoppingItem> = remember(items, filter.value, items.size) {
-        Log.d("ShoppingApp", "Filtering: filter=${filter.value}, items=${items.map { it.storeNumber to it.name }}")
-        if (filter.value == null) items.toList()
-        else items.filter { it.storeNumber == filter.value }
+    val filteredItems = if (filter.value == null) items else items.filter { it.storeNumber == filter.value }
+
+    val onDragStart: (ShoppingItem, Int) -> Unit = { item, height ->
+        draggedItem.value = item
+        dragOriginalIndex.value = items.indexOf(item)
+        draggedOffset.value = 0f
+        draggedItemHeight.value = height
+    }
+
+    val onDrag: (Float) -> Unit = { deltaY ->
+        val originalIndex = dragOriginalIndex.value
+        val height = draggedItemHeight.value
+        if (originalIndex != -1 && height > 0) {
+            draggedOffset.value += deltaY
+            val offsetSteps = (draggedOffset.value / height).toInt()
+            var targetIndex = originalIndex + offsetSteps
+            targetIndex = targetIndex.coerceIn(0, items.size - 1)
+            val item = draggedItem.value
+            if (item != null) {
+                val currentIndex = items.indexOf(item)
+                if (currentIndex != targetIndex) {
+                    items.remove(item)
+                    items.add(targetIndex, item)
+                }
+            }
+        }
+    }
+
+    val onDragEnd: () -> Unit = {
+        fileManager.saveAllItems(items)
+        val reloaded = fileManager.loadAllItems()
+        items.clear()
+        items.addAll(reloaded)
+        draggedItem.value = null
+        dragOriginalIndex.value = -1
+        draggedOffset.value = 0f
+        draggedItemHeight.value = 0
     }
 
     Scaffold(
@@ -417,10 +534,22 @@ fun ShoppingApp() {
             )
             ShoppingList(
                 items = filteredItems,
+                selectedItems = selectedItems.value,
                 onDelete = { item ->
                     items.remove(item)
                     fileManager.deleteItem(item)
                 },
+                onToggle = { item ->
+                    val currentSet = selectedItems.value
+                    selectedItems.value = if (item in currentSet) {
+                        currentSet - item
+                    } else {
+                        currentSet + item
+                    }
+                },
+                onDragStart = onDragStart,
+                onDrag = onDrag,
+                onDragEnd = onDragEnd,
                 modifier = Modifier.weight(1f)
             )
             InputRow(

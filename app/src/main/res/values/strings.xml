@@ -11,5 +11,4 @@
     <string name="add_button">OK</string>
     <string name="empty_list">No items in list</string>
     <string name="hint_enter_item">Enter item name</string>
-    <string name="error_empty_input">Please enter an item name</string>
 </resources>

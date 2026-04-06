@@ -935,7 +935,6 @@ string default_error_message
 string default_popup_window_title
 string dropdown_menu
 string empty_list
-string error_empty_input
 string filter_all
 string filter_dm
 string filter_edeka

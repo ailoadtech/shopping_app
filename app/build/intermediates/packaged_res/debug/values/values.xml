@@ -4,7 +4,6 @@
     <string name="add_button">OK</string>
     <string name="app_name">Shopping List</string>
     <string name="empty_list">No items in list</string>
-    <string name="error_empty_input">Please enter an item name</string>
     <string name="filter_all">All</string>
     <string name="filter_dm">DM</string>
     <string name="filter_edeka">Edeka</string>

@@ -13,7 +13,6 @@ mipmap ic_launcher_round
 string add_button
 string app_name
 string empty_list
-string error_empty_input
 string filter_all
 string filter_dm
 string filter_edeka
